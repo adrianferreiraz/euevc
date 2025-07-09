@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Nosso Amor pelo Mundo 💖</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+  <style>
+    :root {
+      --rosa-principal: #ff6fa1;
+      --rosa-claro: #ffcad4;
+      --roxo: #9d4edd;
+      --roxo-escuro: #6c4cff;
+      --fundo-escuro: #0d0d0d;
+      --fundo-claro: #1a1a1a;
+      --texto: #f8f8f8;
+      --texto-claro: #ffdee9;
+      --texto-cinza: #cfcfcf;
+    }
+
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: var(--texto);
+      overflow-x: hidden;
+      padding: 20px 15px 100px;
+      text-align: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--fundo-escuro);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+    
+    .loader-heart {
+      font-size: 3rem;
+      animation: pulse 1.5s infinite ease-in-out;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(0.8); opacity: 0.7; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.8); opacity: 0.7; }
+    }
+
+    .parallax-layer {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background-size: cover;
+      pointer-events: none;
+    }
+
+    #layer1 {
+      background-image: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #0d0d0d 100%);
+    }
+
+    #layer2 {
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.5"/></svg>');
+      background-size: 3px 3px;
+      opacity: 0.3;
+      animation: starsMove 100s linear infinite;
+    }
+
+    @keyframes starsMove {
+      from { background-position: 0 0; }
+      to { background-position: 100px 100px; }
+    }
+
+    #senhaContainer {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100vw; 
+      height: 100vh;
+      background: linear-gradient(135deg, #111, #1b1b1b);
+      color: var(--texto);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      transition: all 0.5s ease;
+      padding: 20px;
+      backdrop-filter: blur(5px);
+    }
+
+    #senhaContainer h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: var(--rosa-claro);
+      text-align: center;
+      max-width: 300px;
+    }
+
+    #senhaContainer.shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+
+    #senhaContainer input {
+      padding: 15px 20px;
+      font-size: 1.1rem;
+      border: 2px solid var(--rosa-principal);
+      border-radius: 12px;
+      margin-top: 15px;
+      text-align: center;
+      outline: none;
+      width: 100%;
+      max-width: 280px;
+      background: rgba(255,255,255,0.1);
+      color: var(--texto);
+      transition: all 0.3s ease;
+    }
+
+    #senhaContainer input:focus {
+      transform: scale(1.02);
+      box-shadow: 0 0 15px rgba(255, 111, 161, 0.5);
+    }
+
+    #senhaContainer button {
+      margin-top: 25px;
+      padding: 12px 30px;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 12px;
+      background: linear-gradient(45deg, var(--rosa-principal), var(--roxo));
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 111, 161, 0.4);
+    }
+
+    #senhaContainer button:active {
+      transform: scale(0.95);
+    }
+
+    #senhaErro {
+      color: #ff8c8c;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--texto-claro);
+      text-shadow: 0 2px 10px rgba(255, 160, 200, 0.3);
+      animation: fadeInDown 1s ease;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: var(--texto-cinza);
+      margin-bottom: 30px;
+      line-height: 1.6;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeIn 1.2s ease;
+    }
+
+    #map-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto 40px;
+      animation: fadeInUp 1s ease;
+      height: 90vh;
+      max-height: 600px;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(255, 160, 200, 0.3);
+      border: 2px solid rgba(255,255,255,0.15);
+      transition: all 0.5s ease;
+    }
+
+    #map:hover {
+      transform: scale(1.02);
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: rgba(30, 30, 30, 0.95);
+      color: var(--texto);
+      border-radius: 15px;
+      padding: 15px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .leaflet-popup-content-wrapper strong {
+      color: var(--rosa-claro);
+      font-weight: 600;
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1rem;
+    }
+
+    .leaflet-popup-content-wrapper button {
+      margin-top: 12px;
+      background: linear-gradient(45deg, var(--rosa-principal), var(--roxo));
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      font-weight: 500;
+    }
+
+    .leaflet-popup-content-wrapper button:active {
+      transform: scale(0.95);
+    }
+
+    #timeline {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      position: relative;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: opacity 0.5s ease, height 0.5s ease;
+    }
+
+    #timeline.show {
+      opacity: 1;
+      height: auto;
+      overflow: visible;
+    }
+
+    #timeline::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: linear-gradient(to bottom, var(--rosa-principal), var(--roxo));
+      transform: translateX(-50%);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+
+    .timeline-item:nth-child(odd) {
+      padding-right: 50%;
+      text-align: right;
+    }
+
+    .timeline-item:nth-child(even) {
+      padding-left: 50%;
+      text-align: left;
+    }
+
+    .timeline-date {
+      font-family: 'Dancing Script', cursive;
+      color: var(--rosa-claro);
+      font-size: 1.3rem;
+      margin-bottom: 5px;
+    }
+
+    .timeline-content {
+      background: rgba(255, 111, 161, 0.1);
+      backdrop-filter: blur(5px);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 111, 161, 0.2);
+      display: inline-block;
+      max-width: 80%;
+    }
+
+    #modal {
+      position: fixed;
+      top: 0; 
+      left: 0;
+      width: 100vw; 
+      height: 100vh;
+      background: rgba(0,0,0,0.9);
+      color: var(--texto);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: left;
+      z-index: 999;
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.4s ease;
+    }
+
+    #modalContent {
+      max-width: 500px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(40, 40, 40, 0.95));
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    #modalContent h2 {
+      color: var(--rosa-claro);
+      margin-bottom: 15px;
+      font-size: 1.5rem;
+    }
+
+    #modalContent p {
+      line-height: 1.7;
+      color: var(--texto-cinza);
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 20px;
+      background: var(--rosa-principal);
+      margin-left: 3px;
+      animation: blink 0.7s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    #modalClose {
+      position: absolute;
+      top: 15px; 
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: var(--rosa-principal);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    #modalClose:active {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .floating-btn {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: linear-gradient(45deg, var(--rosa-principal), var(--roxo));
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+      box-shadow: 0 5px 20px rgba(255, 122, 160, 0.6);
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .floating-btn:active {
+      transform: scale(0.9);
+      box-shadow: 0 3px 15px rgba(255, 122, 160, 0.8);
+    }
+
+    .floating-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(30,30,30,0.9);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .floating-btn:hover::after {
+      opacity: 1;
+    }
+
+    #gotoTop {
+      right: auto;
+      left: 25px;
+      background: linear-gradient(45deg, var(--roxo), var(--roxo-escuro));
+      box-shadow: 0 5px 20px rgba(108, 76, 255, 0.6);
+      data-tooltip: "Voltar ao topo";
+    }
+
+    #showTimeline {
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(45deg, #4cc9f0, #4895ef);
+      data-tooltip: "Ver nossa linha do tempo";
+    }
+
+    #backToMap {
+      display: none;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(45deg, #f72585, #b5179e);
+      data-tooltip: "Voltar ao mapa";
+    }
+
+    .heart-falling {
+      position: fixed;
+      pointer-events: none;
+      z-index: 100;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #timeline::before {
+        left: 30px;
+      }
+      
+      .timeline-item:nth-child(odd),
+      .timeline-item:nth-child(even) {
+        padding-left: 70px;
+        padding-right: 20px;
+        text-align: left;
+      }
+      
+      .timeline-content {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 { 
+        font-size: 1.6rem;
+        margin-bottom: 10px;
+      }
+      
+      .subtitle { 
+        font-size: 0.85rem;
+        margin-bottom: 20px;
+      }
+      
+      #map-container {
+        height: 70vh;
+        max-height: none;
+        margin-bottom: 20px;
+      }
+      
+      .floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        bottom: 15px;
+        right: 15px;
+      }
+      
+      #gotoTop, #showTimeline, #backToMap {
+        left: 15px;
+        transform: none;
+      }
+      
+      #showTimeline, #backToMap {
+        left: auto;
+        right: 15px;
+      }
+      
+      #modalContent {
+        padding: 15px;
+      }
+      
+      #modalContent h2 {
+        font-size: 1.2rem;
+      }
+      
+      .timeline-date {
+        font-size: 1.1rem;
+      }
+      
+      .timeline-content {
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 320px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+      
+      .subtitle {
+        font-size: 0.8rem;
+      }
+      
+      #map-container {
+        height: 65vh;
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInDown {
+      from { 
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to { 
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--rosa-principal);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="loader-heart">💖</div>
+    <p>Carregando nosso amor...</p>
+  </div>
+
+  <div class="parallax-layer" id="layer1"></div>
+  <div class="parallax-layer" id="layer2"></div>
+
+  <div id="senhaContainer">
+    <h2>🔐 Qual a senha do nosso coração?</h2>
+    <input type="password" id="senhaInput" placeholder="Digite aqui..." />
+    <button onclick="verificarSenha()">Entrar</button>
+    <div id="senhaErro">Essa não é a senha do nosso coração... tente de novo 💔</div>
+  </div>
+
+  <h1>🌍 Nosso Amor pelo Mundo</h1>
+  <p class="subtitle">Memórias que cruzam distâncias, mas permanecem vivas onde nossos corações se encontram.</p>
+
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+
+  <div id="timeline">
+    <div class="timeline-item">
+      <div class="timeline-date">09/07/2025</div>
+      <div class="timeline-content">O dia em que decidi fazer esse site pra você, percebi o quanto você representa pra mim, mesmo em tão pouco tempo.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">05/07/2025</div>
+      <div class="timeline-content">Foi quando passamos a ser sinceros sobre o que sentíamos que nosso sentimento começou a florescer de verdade.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">29/07/2025</div>
+      <div class="timeline-content">Quando naquele sofá, demostramos carinho um pelo outro.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-date">19/06/2025</div>
+      <div class="timeline-content">Quando nós apaixonamos um pelo outro.</div>
+    </div>
+  </div>
+
+  <div id="modal">
+    <button id="modalClose">✖</button>
+    <div id="modalContent"></div>
+  </div>
+
+  <button class="floating-btn" id="gotoTop">↑</button>
+  <button class="floating-btn" id="showTimeline">📅</button>
+  <button class="floating-btn" id="backToMap">🌍</button>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const senhaCorreta = "190625";
+    let map;
+    let markers = [];
+    let lugares = [];
+    let timelineVisible = false;
+
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('loader').style.opacity = '0';
+        setTimeout(function() {
+          document.getElementById('loader').style.display = 'none';
+        }, 500);
+      }, 1500);
+    });
+
+    function verificarSenha() {
+      const input = document.getElementById('senhaInput').value;
+      const container = document.getElementById('senhaContainer');
+      const erro = document.getElementById('senhaErro');
+
+      if (input === senhaCorreta) {
+        container.style.opacity = "0";
+        setTimeout(() => {
+          container.style.display = "none";
+          iniciarMapa();
+          criarEfeitos();
+        }, 500);
+      } else {
+        erro.style.display = "block";
+        container.classList.add("shake");
+        setTimeout(() => container.classList.remove("shake"), 400);
+        
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => criarCoracao(), i * 200);
+        }
+      }
+    }
+
+    document.getElementById('senhaInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        verificarSenha();
+      }
+    });
+
+    function typeWriter(element, text, speed = 30) {
+      let i = 0;
+      element.innerHTML = '';
+      
+      function typing() {
+        if (i < text.length) {
+          element.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(typing, speed);
+        } else {
+          const cursor = document.createElement('span');
+          cursor.className = 'cursor';
+          element.appendChild(cursor);
+        }
+      }
+      
+      typing();
+    }
+
+    function iniciarMapa() {
+      document.getElementById('loader').style.display = 'flex';
+      document.getElementById('loader').style.opacity = '1';
+
+      setTimeout(function() {
+        map = L.map('map', {
+          zoomControl: false,
+          attributionControl: false,
+          gestureHandling: true
+        }).setView([-15, -50], 3);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 18
+        }).addTo(map);
+
+        lugares = [
+          {
+            nome: "☃️ Bariloche, Argentina",
+            coords: [-41.1335, -71.3103],
+            texto: `Foi aqui, mesmo à distância, que nossas mensagens se tornaram abrigo.
+Conversamos por horas, nos abrimos como nunca antes.
+Entre emojis, palavras e silêncios sinceros, nossos sentimentos cresceram.
+A saudade aperta, mas saber que você está aí me faz sentir mais perto do que nunca.`,
+            icon: L.divIcon({
+              className: 'heart-marker',
+              html: '💖',
+              iconSize: [30, 30]
+            })
+          },
+          {
+            nome: "🦜 Aracaju, Sergipe – Brasil",
+            coords: [-10.9472, -37.0731],
+            texto: `No dia 28 de julho, você vai brilhar na quadra.
+Eu estarei na arquibancada, com o coração acelerado, só por te ver jogar vôlei.
+Sei que você ainda não sabe exatamente como me explicar o jogo,
+mas pra mim, isso nem importa.
+A sua presença é suficiente.
+Se quiser, pode nem dizer nada. Só de estar ao seu lado, meu mundo já está em paz.`,
+            icon: L.divIcon({
+              className: 'heart-marker',
+              html: '🏐',
+              iconSize: [30, 30]
+            })
+          },
+          {
+            nome: "💒 Capela, Sergipe – Brasil",
+            coords: [-10.5065, -37.0574],
+            texto: `🛋️ Foi aqui que você me viu dormindo no sofá...
+E, por algum motivo que ainda não entendo, você riu de mim… e se apaixonou.
+Agradeço profundamente por aquele momento.
+Foi ali que o destino fez morada no teu coração.
+
+Isso aconteceu três dias depois do meu aniversário —
+e, pensando bem, acho que esse acabou sendo o meu maior presente.
+
+Naquele mesmo sofá, mesmo com sono, não conseguia tirar os olhos de você.
+Você estava tão linda…
+Ficamos de mãos dadas, você acariciou minha mão, eu retribuí…
+Meu Deus, como eu queria que aquele momento fosse eterno.`,
+            icon: L.divIcon({
+              className: 'heart-marker',
+              html: '🛋️',
+              iconSize: [30, 30]
+            })
+          }
+        ];
+
+        lugares.forEach((lugar, i) => {
+          const marker = L.marker(lugar.coords, { icon: lugar.icon }).addTo(map);
+          marker.bindPopup(`
+            <strong>📍 ${lugar.nome}</strong><br>
+            ${lugar.texto.split("\n")[0]}...
+            <br><button onclick="abrirModal(${i})">Ler mais 💬</button>
+          `);
+          markers.push(marker);
+        });
+
+        setTimeout(() => {
+          const group = new L.featureGroup(markers);
+          map.fitBounds(group.getBounds().pad(0.2));
+          
+          document.getElementById('loader').style.opacity = '0';
+          setTimeout(function() {
+            document.getElementById('loader').style.display = 'none';
+          }, 500);
+        }, 300);
+      }, 500);
+    }
+
+    function abrirModal(i) {
+      const lugar = lugares[i];
+      const modalContent = document.getElementById('modalContent');
+      modalContent.innerHTML = `<h2>${lugar.nome}</h2><p id="modalText"></p>`;
+      
+      document.getElementById('modal').style.display = "flex";
+      typeWriter(document.getElementById('modalText'), lugar.texto);
+      
+      for (let i = 0; i < 3; i++) {
+        setTimeout(criarCoracao, i * 300);
+      }
+    }
+
+    document.getElementById('modalClose').onclick = () => {
+      document.getElementById('modal').style.display = "none";
+    };
+
+    document.getElementById('gotoTop').onclick = () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    function toggleTimeline() {
+      const timeline = document.getElementById('timeline');
+      timelineVisible = !timelineVisible;
+      
+      if (timelineVisible) {
+        timeline.style.display = "block";
+        setTimeout(() => {
+          timeline.classList.add('show');
+        }, 10);
+        document.getElementById('showTimeline').style.display = 'none';
+        document.getElementById('backToMap').style.display = 'flex';
+        setTimeout(() => {
+          timeline.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+      } else {
+        timeline.classList.remove('show');
+        setTimeout(() => {
+          timeline.style.display = "none";
+          document.getElementById('showTimeline').style.display = 'flex';
+          document.getElementById('backToMap').style.display = 'none';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 500);
+      }
+    }
+
+    document.getElementById('showTimeline').addEventListener('click', function(e) {
+      e.preventDefault();
+      toggleTimeline();
+    }, {passive: false});
+    
+    document.getElementById('backToMap').addEventListener('click', function(e) {
+      e.preventDefault();
+      toggleTimeline();
+    }, {passive: false});
+
+    function criarEfeitos() {
+      setInterval(() => {
+        if (Math.random() > 0.7) {
+          criarCoracao();
+        }
+      }, 3000);
+    }
+
+    function criarCoracao() {
+      const heart = document.createElement('div');
+      heart.className = 'heart-falling';
+      heart.innerHTML = ['💖', '💗', '💓', '💘', '💝'][Math.floor(Math.random() * 5)];
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.top = '-50px';
+      heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+      heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+      document.body.appendChild(heart);
+      
+      setTimeout(() => {
+        heart.remove();
+      }, 5000);
+    }
+
+    document.getElementById('map').addEventListener('click', (e) => {
+      if (e.target.id === 'map') {
+        for (let i = 0; i < 2; i++) {
+          setTimeout(criarCoracao, i * 200);
+        }
+      }
+    });
+
+    window.abrirModal = abrirModal;
+  </script>
+</body>
+</html>
